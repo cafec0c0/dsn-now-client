@@ -1,0 +1,6 @@
+<dsn>
+    <station name="gdscc" friendlyName="Goldstone" timeUTC="1770497799000" timeZoneOffset="-28800000.0"/>
+    <dish name="DSS14" azimuthAngle="0" elevationAngle="90" windSpeed="" isMSPA="false" isArray="false" isDDOR="false" activity="Antenna Unplanned Maintenance">
+    </dish>
+    <timestamp>1770497799000</timestamp>
+</dsn>

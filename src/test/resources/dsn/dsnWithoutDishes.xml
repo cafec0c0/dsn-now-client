@@ -1,0 +1,9 @@
+<dsn>
+    <station name="gdscc" friendlyName="Goldstone" timeUTC="1770497799000" timeZoneOffset="-28800000.0"/>
+
+    <station name="mdscc" friendlyName="Madrid" timeUTC="1770497799000" timeZoneOffset="3600000.0"/>
+
+    <station name="cdscc" friendlyName="Canberra" timeUTC="1770497799000" timeZoneOffset="39600000.0"/>
+
+    <timestamp>1770497799000</timestamp>
+</dsn>
