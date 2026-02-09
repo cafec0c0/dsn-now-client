@@ -1,26 +1,57 @@
 package net.adambruce.dsn.now.model.merged;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 
 /**
  * Merged ground station information from the DSN configuration and state endpoints.
- *
- * @param name the name of the ground station
- * @param friendlyName the friendly name of the ground station
- * @param longitude the longitude of the ground station
- * @param latitude the latitude of the ground station
- * @param time the local time of the ground station
- * @param timeZoneOffset the timezone offset relative to UTC
- * @param dishes the dishes located at this ground station
  */
-public record MergedStationData(
-        String name,
-        String friendlyName,
-        Double longitude,
-        Double latitude,
-        Instant time,
-        ZoneOffset timeZoneOffset,
-        List<MergedDishData> dishes
-) { }
+@Getter
+@AllArgsConstructor
+public class MergedStationData {
+    /**
+     * the name of the ground station
+     * @return the name of the ground station
+     */
+    private String name;
+
+    /**
+     * the friendly name of the ground station
+     * @return the friendly name of the ground station
+     */
+    private String friendlyName;
+
+    /**
+     * the longitude of the ground station
+     * @return the longitude of the ground station
+     */
+    private Double longitude;
+
+    /**
+     * the latitude of the ground station
+     * @return the latitude of the ground station
+     */
+    private Double latitude;
+
+    /**
+     * the time at the ground station
+     * @return the time at the ground station
+     */
+    private Instant time;
+
+    /**
+     * the timezone offset relative to UTC
+     * @return the timezone offset relative to UTC
+     */
+    private ZoneOffset timeZoneOffset;
+
+    /**
+     * the dishes located at this ground station
+     * @return the dishes located at this ground station
+     */
+    private List<MergedDishData> dishes;
+}
