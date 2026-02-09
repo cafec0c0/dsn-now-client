@@ -421,12 +421,12 @@ class DeepSpaceNetworkClientTest {
         assertEquals(activity, dish.getActivity());
     }
 
-    private static void assertMergedTarget(MergedTargetData target, String name, Long id, Long upLegrange,
+    private static void assertMergedTarget(MergedTargetData target, String name, Long id, Long upLegRange,
                                            Long downLegRange, Double rtlt, String explorerName, String acronym,
                                            String friendlyName, Boolean thumbnail) {
         assertEquals(name, target.getName());
         assertEquals(id, target.getId());
-        assertEquals(upLegrange, target.getUpLegRange());
+        assertEquals(upLegRange, target.getUpLegRange());
         assertEquals(downLegRange, target.getDownLegRange());
         assertEquals(rtlt, target.getRoundTripLightTime());
         assertEquals(explorerName, target.getExplorerName());
