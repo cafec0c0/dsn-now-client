@@ -16,21 +16,28 @@ import org.apache.commons.io.IOUtils;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
+import org.apache.hc.core5.http.io.entity.BasicHttpEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 import java.time.ZoneOffset;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -45,6 +52,9 @@ class DeepSpaceNetworkClientTest {
     @Mock
     private CloseableHttpClient dsnClient;
 
+    @Mock
+    private ClassicHttpResponse httpResponse;
+
     private final DeepSpaceNetworkClient client = DeepSpaceNetworkClient.newDeepSpaceNetworkClient();
 
     @Test
@@ -56,7 +66,13 @@ class DeepSpaceNetworkClientTest {
 
             Configuration configuration = client.fetchConfiguration();
 
-            verify(configClient, times(1)).execute(any(HttpGet.class), any(HttpClientResponseHandler.class));
+            ArgumentCaptor<HttpClientResponseHandler> handlerCaptor = ArgumentCaptor.forClass(HttpClientResponseHandler.class);
+            verify(configClient, times(1)).execute(any(HttpGet.class), handlerCaptor.capture());
+
+            // Verify our response handler is working as expected
+            when(httpResponse.getEntity()).thenReturn(new BasicHttpEntity(new ByteArrayInputStream(response), response.length, ContentType.APPLICATION_XML));
+            byte[] responseBytes = (byte[])handlerCaptor.getValue().handleResponse(httpResponse);
+            assertArrayEquals(response, responseBytes);
 
             assertSite(configuration.getSites().get(0), "mdscc", "Madrid", -4.2480085, 40.2413554);
             assertSite(configuration.getSites().get(1), "gdscc", "Goldstone", -116.8895382, 35.2443523);
@@ -79,7 +95,13 @@ class DeepSpaceNetworkClientTest {
 
             State state = client.fetchState();
 
-            verify(dsnClient, times(1)).execute(any(HttpGet.class), any(HttpClientResponseHandler.class));
+            ArgumentCaptor<HttpClientResponseHandler> handlerCaptor = ArgumentCaptor.forClass(HttpClientResponseHandler.class);
+            verify(dsnClient, times(1)).execute(any(HttpGet.class), handlerCaptor.capture());
+
+            // Verify our response handler is working as expected
+            when(httpResponse.getEntity()).thenReturn(new BasicHttpEntity(new ByteArrayInputStream(response), response.length, ContentType.APPLICATION_XML));
+            byte[] responseBytes = (byte[])handlerCaptor.getValue().handleResponse(httpResponse);
+            assertArrayEquals(response, responseBytes);
 
             assertStation(state.getStations().get(0), "gdscc", "Goldstone", Instant.ofEpochMilli(1770497799000L), ZoneOffset.ofTotalSeconds(-28800));
 
