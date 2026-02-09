@@ -13,6 +13,9 @@ import java.time.ZoneOffset;
  */
 public class ZoneOffsetDeserializer extends StdDeserializer<ZoneOffset> {
 
+    /**
+     * Creates a new ZoneOffsetDeserializer instance.
+     */
     public ZoneOffsetDeserializer() {
         super(ZoneOffset.class);
     }

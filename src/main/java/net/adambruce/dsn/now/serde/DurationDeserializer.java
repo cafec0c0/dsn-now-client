@@ -7,8 +7,14 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
 import java.time.Duration;
 
+/**
+ * Deserializes {@link java.time.Duration} from seconds
+ */
 public class DurationDeserializer extends StdDeserializer<Duration> {
 
+    /**
+     * Creates a new ZoneOffsetDeserializer instance.
+     */
     public DurationDeserializer() {
         super(Duration.class);
     }

@@ -39,7 +39,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '8'
+          java-version: '25'
       - name: Set pom.xml version for this release
         run: mvn -B versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false
       - name: Generate javadoc
