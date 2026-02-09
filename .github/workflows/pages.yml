@@ -41,9 +41,9 @@ jobs:
           distribution: 'temurin'
           java-version: '8'
       - name: Set pom.xml version for this release
-        run: mvn -Prelease -B versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false
+        run: mvn -B versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false
       - name: Generate javadoc
-        run: mvn -B javadoc:javadoc
+        run: mvn -B clean install
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
