@@ -415,7 +415,7 @@ class DeepSpaceNetworkClientTest {
         assertEquals(azimuth, dish.getAzimuth());
         assertEquals(elevation, dish.getElevation());
         assertEquals(windSpeed, dish.getWindSpeed());
-        assertEquals(mspa, dish.getMultipleSpacecraftForAperture());
+        assertEquals(mspa, dish.getMultipleSpacecraftPerAperture());
         assertEquals(array, dish.getArray());
         assertEquals(ddor, dish.getDeltaDifferentialOneWayRanging());
         assertEquals(activity, dish.getActivity());
