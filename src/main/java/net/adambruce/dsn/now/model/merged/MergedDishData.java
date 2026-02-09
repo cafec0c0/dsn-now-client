@@ -56,7 +56,7 @@ public class MergedDishData {
      * the dish is configured for Multiple Spacecraft Per Aperture (MSPA)
      * @return whether the dish is configured for MSPA
      */
-    private Boolean multipleSpacecraftForAperture;
+    private Boolean multipleSpacecraftPerAperture;
 
     /**
      * the dish is configured as an array
