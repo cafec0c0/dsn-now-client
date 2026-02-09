@@ -6,7 +6,7 @@
 
     <groupId>net.adambruce</groupId>
     <artifactId>dsn-now-client</artifactId>
-    <version>0.0.3-SNAPSHOT</version>
+    <version>0.1.1-SNAPSHOT</version>
     <name>dsn-now-client</name>
     <packaging>jar</packaging>
     <description>Java 8 client for the XML endpoint powering NASA's DSN Now (https://eyes.nasa.gov/apps/dsn-now/dsn.html)</description>
