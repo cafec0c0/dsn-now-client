@@ -1,9 +1,6 @@
 package net.adambruce.dsn.now.model.merged;
 
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.Value;
 import net.adambruce.dsn.now.model.state.Signal;
 
 import java.util.List;
@@ -11,86 +8,83 @@ import java.util.List;
 /**
  * Merged dish information from the DSN configuration and state endpoints.
  */
-@Getter
-@AllArgsConstructor
-@EqualsAndHashCode
-@ToString
+@Value
 public class MergedDishData {
     /**
      * the name of the dish
      * @return the name of the dish
      */
-    private String name;
+    String name;
 
     /**
      * the friendly name of the dish
      * @return the friendly name of the dish
      */
-    private String friendlyName;
+    String friendlyName;
 
     /**
      * the type of dish
      * @return the type of dish
      */
-    private String type;
+    String type;
 
     /**
      * the azimuth of the dish (degrees)
      * @return the azimuth of the dish (degrees)
      */
-    private Long azimuth;
+    Long azimuth;
 
     /**
      * the elevation of the dish (degrees)
      * @return the elevation of the dish (degrees)
      */
-    private Long elevation;
+    Long elevation;
 
     /**
      * the wind speed at the dish (km/hr)
      * @return the wind speed at the dish (km/hr)
      */
-    private Long windSpeed;
+    Long windSpeed;
 
     /**
      * the dish is configured for Multiple Spacecraft Per Aperture (MSPA)
      * @return whether the dish is configured for MSPA
      */
-    private Boolean multipleSpacecraftPerAperture;
+    Boolean multipleSpacecraftPerAperture;
 
     /**
      * the dish is configured as an array
      * @return whether the dish is configured as an array
      */
-    private Boolean array;
+    Boolean array;
 
     /**
      * the dish is configured for Delta-Differential One-Way Ranging (DDOR)
      * @return whether the dish is configured for DDOR
      */
-    private Boolean deltaDifferentialOneWayRanging;
+    Boolean deltaDifferentialOneWayRanging;
 
     /**
      * the activity of the dish
      * @return the activity of the dish
      */
-    private String activity;
+    String activity;
 
     /**
      * the uplink signals transmitting from the dish
      * @return the uplink signals transmitting from the dish
      */
-    private List<Signal> upSignals;
+    List<Signal> upSignals;
 
     /**
      * the downlink signals received by the dish
      * @return the downlink signals received by the dish
      */
-    private List<Signal> downSignals;
+    List<Signal> downSignals;
 
     /**
      * the targets that the dish is tracking
      * @return the targets that the dish is tracking
      */
-    private List<MergedTargetData> target;
+    List<MergedTargetData> target;
 }

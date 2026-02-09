@@ -274,6 +274,8 @@
                         </goals>
                         <configuration>
                             <sourcepath>${project.build.directory}/delombok</sourcepath>
+                            <legacyMode>true</legacyMode>
+                            <show>public</show>
                         </configuration>
                     </execution>
                 </executions>
