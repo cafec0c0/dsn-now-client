@@ -5,6 +5,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.time.Duration;
+
 /**
  * Merged target / spacecraft information from the DSN configuration and state endpoints.
  */
@@ -41,7 +43,7 @@ public class MergedTargetData {
      * the Round Trip Light Time (RTLT) (s)
      * @return the RTLT (s)
      */
-    private Double roundTripLightTime;
+    private Duration roundTripLightTime;
 
     /**
      * the explorer name of the spacecraft

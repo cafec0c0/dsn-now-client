@@ -17,6 +17,7 @@ import net.adambruce.dsn.now.model.config.Spacecraft;
 import net.adambruce.dsn.now.model.state.State;
 import net.adambruce.dsn.now.model.state.Station;
 import net.adambruce.dsn.now.model.state.Target;
+import net.adambruce.dsn.now.serde.DurationDeserializer;
 import net.adambruce.dsn.now.serde.ZoneOffsetDeserializer;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -43,7 +44,8 @@ public class DeepSpaceNetworkClient {
     private static final String DSN_STATE_URL = "https://eyes.nasa.gov/dsn/data/dsn.xml";
 
     private static final SimpleModule SERDE_MODULE = new SimpleModule()
-            .addDeserializer(ZoneOffset.class, new ZoneOffsetDeserializer());
+            .addDeserializer(ZoneOffset.class, new ZoneOffsetDeserializer())
+            .addDeserializer(Duration.class, new DurationDeserializer());
 
     private static final ObjectMapper MAPPER = XmlMapper.builder()
             .addModule(new JavaTimeModule())
