@@ -4,6 +4,8 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import lombok.Data;
 import lombok.Setter;
 
+import java.time.Duration;
+
 /**
  * DSN spacecraft (target) information.
  */
@@ -45,5 +47,5 @@ public class Target {
      * @return the RTLT (s)
      */
     @Setter(onMethod_ = @JacksonXmlProperty(localName = "rtlt"))
-    private Double roundTripLightTime;
+    private Duration roundTripLightTime;
 }

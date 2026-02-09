@@ -36,6 +36,7 @@ import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -116,21 +117,21 @@ class DeepSpaceNetworkClientTest {
 
             assertStation(state.getStations().get(0), "gdscc", "Goldstone", Instant.ofEpochMilli(1770497799000L), ZoneOffset.ofTotalSeconds(-28800));
 
-            assertDish(state.getDishes().get(0), "DSS14", 0, 90, null, false, false, false, "Antenna Unplanned Maintenance");
-            assertTarget(state.getDishes().get(0).getTargets().get(0), "DSS", 99, -1, -1, -1);
+            assertDish(state.getDishes().get(0), "DSS14", 0L, 90L, null, false, false, false, "Antenna Unplanned Maintenance");
+            assertTarget(state.getDishes().get(0).getTargets().get(0), "DSS", 99L, -1L, -1L, null);
 
-            assertDish(state.getDishes().get(1), "DSS25", 251, 13, 8L, false, false, false, "DSN Very Long Baseline Interferometry");
-            assertTarget(state.getDishes().get(1).getTargets().get(0), "DSN", 99, -1, -1, -1);
+            assertDish(state.getDishes().get(1), "DSS25", 251L, 13L, 8L, false, false, false, "DSN Very Long Baseline Interferometry");
+            assertTarget(state.getDishes().get(1).getTargets().get(0), "DSN", 99L, -1L, -1L, null);
 
-            assertDish(state.getDishes().get(2), "DSS24", 179, 18, 8L, false, false, false, "Spacecraft Telemetry, Tracking, and Command");
+            assertDish(state.getDishes().get(2), "DSS24", 179L, 18L, 8L, false, false, false, "Spacecraft Telemetry, Tracking, and Command");
             assertSignal(state.getDishes().get(2).getUpSignals().get(0), true, "data", 0L, 0L, "S", 0.2, "MMS2", -109L);
             assertSignal(state.getDishes().get(2).getDownSignals().get(0), true, "data", 1250000L, 0L, "S", -110D, "MMS2", -109L);
-            assertTarget(state.getDishes().get(2).getTargets().get(0), "MMS2", 109, 130000, 130000, 0.87);
+            assertTarget(state.getDishes().get(2).getTargets().get(0), "MMS2", 109L, 130000L, 130000L, 0.87);
 
-            assertDish(state.getDishes().get(3), "DSS26", 180, 90, 8L, false, false, false, "Spacecraft Telemetry, Tracking, and Command");
+            assertDish(state.getDishes().get(3), "DSS26", 180L, 90L, 8L, false, false, false, "Spacecraft Telemetry, Tracking, and Command");
             assertSignal(state.getDishes().get(3).getUpSignals().get(0), false, "none", 0L, 0L, "X", 0D, "SOHO", -21L);
             assertSignal(state.getDishes().get(3).getDownSignals().get(0), false, "none", 0L, 0L, "S", -480D, "SOHO", -21L);
-            assertTarget(state.getDishes().get(3).getTargets().get(0), "SOHO", 21, 1640000, 1640000, 10.9);
+            assertTarget(state.getDishes().get(3).getTargets().get(0), "SOHO", 21L, 1640000L, 1640000L, 10.9);
         }
     }
 
@@ -364,7 +365,7 @@ class DeepSpaceNetworkClientTest {
         assertEquals(thumbnail, craft.getThumbnail());
     }
 
-    private static void assertDish(Dish dish, String name, long azimuth, long elevation, Long windSpeed, Boolean mspa,
+    private static void assertDish(Dish dish, String name, Long azimuth, Long elevation, Long windSpeed, Boolean mspa,
                                    Boolean array, Boolean ddor, String activity) {
         assertEquals(name, dish.getName());
         assertEquals(azimuth, dish.getAzimuth());
@@ -376,15 +377,20 @@ class DeepSpaceNetworkClientTest {
         assertEquals(activity, dish.getActivity());
     }
 
-    private static void assertTarget(Target target, String name, long id, long upleg, long downleg, double rtlt) {
+    private static void assertTarget(Target target, String name, Long id, Long upleg, Long downleg, Double rtlt) {
         assertEquals(name, target.getName());
         assertEquals(id, target.getId());
         assertEquals(upleg, target.getUpLegRange());
         assertEquals(downleg, target.getDownLegRange());
-        assertEquals(rtlt, target.getRoundTripLightTime());
+
+        if (rtlt == null) {
+            assertNull(target.getRoundTripLightTime());
+        } else {
+            assertEquals(Duration.ofSeconds(rtlt.longValue()), target.getRoundTripLightTime());
+        }
     }
 
-    private static void assertSignal(Signal signal, boolean active, String type, Long rate, Long frequency,
+    private static void assertSignal(Signal signal, Boolean active, String type, Long rate, Long frequency,
                                      String band, Double power, String spacecraft, Long spacecraftId) {
         assertEquals(active, signal.getActive());
         assertEquals(type, signal.getSignalType());
@@ -428,7 +434,7 @@ class DeepSpaceNetworkClientTest {
         assertEquals(id, target.getId());
         assertEquals(upLegRange, target.getUpLegRange());
         assertEquals(downLegRange, target.getDownLegRange());
-        assertEquals(rtlt, target.getRoundTripLightTime());
+        assertEquals(Duration.ofSeconds(rtlt.longValue()), target.getRoundTripLightTime());
         assertEquals(explorerName, target.getExplorerName());
         assertEquals(acronym, target.getFriendlyAcronym());
         assertEquals(friendlyName, target.getFriendlyName());
