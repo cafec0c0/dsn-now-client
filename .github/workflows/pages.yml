@@ -30,12 +30,18 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      - name: Remove tag prefix
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
       - name: Checkout
         uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '8'
+      - name: Set pom.xml version for this release
+        run: mvn -Prelease -B versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false
       - name: Generate javadoc
         run: mvn -B javadoc:javadoc
       - name: Setup Pages
