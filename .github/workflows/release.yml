@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '8'
       - name: Set pom.xml version for this release
         run: mvn -Prelease -B versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false
       - name: Build jar
@@ -40,7 +40,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '8'
       - name: Set pom.xml version for this release
         run: mvn -Prelease -B versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false
       - name: Publish package

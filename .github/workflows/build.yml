@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '8'
       - name: Set pom.xml version for this build
         run: mvn -B versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false
       - name: Build jar

@@ -52,7 +52,7 @@ MergedDeepSpaceNetworkData data = client.fetchMergedDeepSpaceNetworkData();
 
 ## Building from Source
 To build from source, you will require:
-- Java 17+ 
+- Java 8+ 
 - Maven
 
 Run the following command (use -Prelease to generate source JAR):

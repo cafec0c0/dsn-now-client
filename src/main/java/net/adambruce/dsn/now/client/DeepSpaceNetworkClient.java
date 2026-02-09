@@ -1,8 +1,13 @@
 package net.adambruce.dsn.now.client;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import net.adambruce.dsn.now.model.config.Configuration;
+import net.adambruce.dsn.now.model.merged.MergedData;
 import net.adambruce.dsn.now.model.merged.MergedDishData;
-import net.adambruce.dsn.now.model.merged.MergedDeepSpaceNetworkData;
 import net.adambruce.dsn.now.model.merged.MergedStationData;
 import net.adambruce.dsn.now.model.merged.MergedTargetData;
 import net.adambruce.dsn.now.model.config.Dish;
@@ -11,16 +16,13 @@ import net.adambruce.dsn.now.model.config.Spacecraft;
 import net.adambruce.dsn.now.model.state.State;
 import net.adambruce.dsn.now.model.state.Station;
 import net.adambruce.dsn.now.model.state.Target;
-import net.adambruce.dsn.now.serde.StateDeserializer;
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.module.SimpleModule;
-import tools.jackson.dataformat.xml.XmlMapper;
+import net.adambruce.dsn.now.serde.ZoneOffsetDeserializer;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -34,10 +36,12 @@ import java.util.stream.Collectors;
 public class DeepSpaceNetworkClient {
 
     private static final SimpleModule SERDE_MODULE = new SimpleModule()
-            .addDeserializer(State.class, new StateDeserializer());
+            .addDeserializer(ZoneOffset.class, new ZoneOffsetDeserializer());
 
     private static final ObjectMapper MAPPER = XmlMapper.builder()
+            .addModule(new JavaTimeModule())
             .addModule(SERDE_MODULE)
+            .configure(DeserializationFeature.READ_DATE_TIMESTAMPS_AS_NANOSECONDS, false)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .build();
 
@@ -63,16 +67,13 @@ public class DeepSpaceNetworkClient {
      * @throws Exception the network request failed, or the response could not be deserialized
      */
     public Configuration fetchConfiguration() throws Exception {
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .GET()
-                .uri(URI.create("https://eyes.nasa.gov/apps/dsn-now/config.xml"))
-                .build();
-
-        HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
-        Configuration configuration = MAPPER.readValue(response.body(), Configuration.class);
-        CONFIG.set(configuration);
-        return configuration;
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpGet request = new HttpGet("https://eyes.nasa.gov/apps/dsn-now/config.xml");
+            byte[] response = httpClient.execute(request, classicHttpResponse -> EntityUtils.toByteArray(classicHttpResponse.getEntity()));
+            Configuration configuration = MAPPER.readValue(response, Configuration.class);
+            CONFIG.set(configuration);
+            return configuration;
+        }
     }
 
     /**
@@ -81,15 +82,12 @@ public class DeepSpaceNetworkClient {
      * @return the current DSN state
      * @throws Exception the network request failed, or the response could not be deserialized
      */
-    public State fetchDeepSpaceNetworkState() throws Exception {
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .GET()
-                .uri(URI.create("https://eyes.nasa.gov/dsn/data/dsn.xml"))
-                .build();
-
-        HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
-        return MAPPER.readValue(response.body(), State.class);
+    public State fetchState() throws Exception {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpGet request = new HttpGet("https://eyes.nasa.gov/dsn/data/dsn.xml");
+            byte[] response = httpClient.execute(request, classicHttpResponse -> EntityUtils.toByteArray(classicHttpResponse.getEntity()));
+            return MAPPER.readValue(response, State.class);
+        }
     }
 
     /**
@@ -99,69 +97,71 @@ public class DeepSpaceNetworkClient {
      * @return the current DSN state merged with the DSN Now configuration
      * @throws Exception the network request failed, or the response could not be deserialized
      */
-    public MergedDeepSpaceNetworkData fetchMergedDeepSpaceNetworkData() throws Exception {
+    public MergedData fetchMergedState() throws Exception {
         if (CONFIG.get() == null) {
             fetchConfiguration();
         }
 
         Configuration configuration = CONFIG.get();
-        State state = fetchDeepSpaceNetworkState();
+        State state = fetchState();
 
-        Map<String, Station> dsnStationByName = state.stations().stream()
-                .collect(Collectors.toMap(s -> s.name().toLowerCase(), Function.identity()));
+        Map<String, Station> dsnStationByName = state.getStations().stream()
+                .collect(Collectors.toMap(s -> s.getName().toLowerCase(), Function.identity()));
 
-        Map<String, net.adambruce.dsn.now.model.state.Dish> dsnDishByName = state.dishes().stream()
-                .collect(Collectors.toMap(d -> d.name().toLowerCase(), Function.identity()));
+        Map<String, net.adambruce.dsn.now.model.state.Dish> dsnDishByName = state.getDishes().stream()
+                .collect(Collectors.toMap(d -> d.getName().toLowerCase(), Function.identity()));
 
-        Map<String, Spacecraft> configSpacecraftByName = configuration.spacecraft().stream()
-                .collect(Collectors.toMap(s -> s.name().toLowerCase(), Function.identity()));
+        Map<String, Spacecraft> configSpacecraftByName = configuration.getSpacecraft().stream()
+                .collect(Collectors.toMap(s -> s.getName().toLowerCase(), Function.identity()));
 
-        List<MergedStationData> stations = configuration.sites().stream()
+        List<MergedStationData> stations = configuration.getSites().stream()
                 .map(site -> getMergedStation(site, dsnStationByName, dsnDishByName, configSpacecraftByName))
-                .toList();
+                .collect(Collectors.toList());
 
-        return new MergedDeepSpaceNetworkData(
+        return new MergedData(
                 stations,
-                state.timestamp()
+                state.getTimestamp()
         );
     }
 
     private MergedTargetData getMergedTarget(Target target, Map<String, Spacecraft> spacecraftMap) {
-        Spacecraft spacecraft = spacecraftMap.get(target.name().toLowerCase());
+        Spacecraft spacecraft = spacecraftMap.get(target.getName().toLowerCase());
 
         return new MergedTargetData(
-                target.name(),
-                target.id(),
-                target.upLegRange(),
-                target.downLegRange(),
-                target.roundTripLightTime(),
-                spacecraft != null ? spacecraft.explorerName() : null,
-                spacecraft != null ? spacecraft.friendlyAcronym() : null,
-                spacecraft != null ? spacecraft.friendlyName() : null,
-                spacecraft != null ? spacecraft.thumbnail() : null
+                target.getName(),
+                target.getId(),
+                target.getUpLegRange(),
+                target.getDownLegRange(),
+                target.getRoundTripLightTime(),
+                spacecraft != null ? spacecraft.getExplorerName() : null,
+                spacecraft != null ? spacecraft.getFriendlyAcronym() : null,
+                spacecraft != null ? spacecraft.getFriendlyName() : null,
+                spacecraft != null ? spacecraft.getThumbnail() : null
         );
     }
 
     private MergedDishData getMergedDish(Dish configDish,
                                          Map<String, net.adambruce.dsn.now.model.state.Dish> dishMap,
                                          Map<String, Spacecraft> spacecraftMap) {
-        net.adambruce.dsn.now.model.state.Dish dish = dishMap.get(configDish.name().toLowerCase());
+        net.adambruce.dsn.now.model.state.Dish dish = dishMap.get(configDish.getName().toLowerCase());
 
         return new MergedDishData(
-                configDish.name(),
-                configDish.friendlyName(),
-                configDish.type(),
-                dish != null ? dish.azimuthAngle() : null,
-                dish != null ? dish.elevationAngle() : null,
-                dish != null ? dish.windSpeed() : null,
-                dish != null ? dish.multipleSpacecraftPerAperture() : null,
-                dish != null ? dish.array() : null,
-                dish != null ? dish.deltaDifferentialOneWayRanging() : null,
-                dish != null ? dish.activity() : null,
-                dish != null ? dish.upSignals() : null,
-                dish != null ? dish.downSignals() : null,
-                dish != null ? dish.targets().stream()
-                        .map(t -> getMergedTarget(t, spacecraftMap)).toList() : Collections.emptyList()
+                configDish.getName(),
+                configDish.getFriendlyName(),
+                configDish.getType(),
+                dish != null ? dish.getAzimuth() : null,
+                dish != null ? dish.getElevation() : null,
+                dish != null ? dish.getWindSpeed() : null,
+                dish != null ? dish.getMultipleSpacecraftPerAperture() : null,
+                dish != null ? dish.getArray() : null,
+                dish != null ? dish.getDeltaDifferentialOneWayRanging() : null,
+                dish != null ? dish.getActivity() : null,
+                dish != null ? dish.getUpSignals() : null,
+                dish != null ? dish.getDownSignals() : null,
+                dish != null
+                        ? dish.getTargets().stream().map(t -> getMergedTarget(t, spacecraftMap))
+                            .collect(Collectors.toList())
+                        : Collections.emptyList()
         );
     }
 
@@ -169,16 +169,18 @@ public class DeepSpaceNetworkClient {
                                                Map<String, Station> stationMap,
                                                Map<String, net.adambruce.dsn.now.model.state.Dish> dishMap,
                                                Map<String, Spacecraft> spacecraftMap) {
-        Station station = stationMap.get(configSite.name().toLowerCase());
+        Station station = stationMap.get(configSite.getName().toLowerCase());
 
         return new MergedStationData(
-                configSite.name(),
-                configSite.friendlyName(),
-                configSite.longitude(),
-                configSite.latitude(),
-                station != null ? station.time() : null,
-                station != null ? station.timeZoneOffset() : null,
-                configSite.dishes().stream().map(dish -> getMergedDish(dish, dishMap, spacecraftMap)).toList()
+                configSite.getName(),
+                configSite.getFriendlyName(),
+                configSite.getLongitude(),
+                configSite.getLatitude(),
+                station != null ? station.getTime() : null,
+                station != null ? station.getTimeZoneOffset() : null,
+                configSite.getDishes().stream()
+                        .map(dish -> getMergedDish(dish, dishMap, spacecraftMap))
+                        .collect(Collectors.toList())
         );
     }
 
