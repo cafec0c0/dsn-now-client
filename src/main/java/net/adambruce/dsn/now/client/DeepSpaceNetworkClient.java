@@ -73,7 +73,7 @@ public class DeepSpaceNetworkClient {
     /**
      * Creates a new instance of the client.
      *
-     * @param maxConfigurationAge the maximum configuration age before {@link #fetchMergedState()} will trigger refresh
+     * @param maxConfigurationAge the maximum configuration age before {@link #fetchMergedData()} will trigger refresh
      * @return a new client
      */
     public static DeepSpaceNetworkClient newDeepSpaceNetworkClient(Duration maxConfigurationAge) {
@@ -121,7 +121,7 @@ public class DeepSpaceNetworkClient {
      * @return the current DSN state merged with the DSN Now configuration
      * @throws Exception the network request failed, or the response could not be deserialized
      */
-    public MergedData fetchMergedState() throws Exception {
+    public MergedData fetchMergedData() throws Exception {
         if (CONFIG.get() == null) {
             log.debug("configuration has not yet been set, updating configuration before fetching state");
             fetchConfiguration();

@@ -39,7 +39,7 @@ The DSN Now state contains up-to-date state information about ground stations, d
 
 ```java
 DeepSpaceNetworkClient client = DeepSpaceNetworkClient.newDeepSpaceNetworkClient();
-State state = client.fetchDeepSpaceNetworkState();
+State state = client.fetchState();
 ```
 
 #### Fetching the current DSN state and merging it with the DSN configuration
@@ -47,7 +47,7 @@ Combines the above two queries to create a single coherent model hierarchy.
 
 ```java
 DeepSpaceNetworkClient client = DeepSpaceNetworkClient.newDeepSpaceNetworkClient();
-MergedDeepSpaceNetworkData data = client.fetchMergedDeepSpaceNetworkData();
+MergedData data = client.fetchMergedData();
 ```
 
 ## Building from Source

@@ -147,7 +147,7 @@ class DeepSpaceNetworkClientTest {
             byte[] dsnResponse = getBytes("dsn/dsn.xml");
             when(dsnClient.execute(any(HttpGet.class), any(HttpClientResponseHandler.class))).thenReturn(dsnResponse);
 
-            MergedData mergedData = client.fetchMergedState();
+            MergedData mergedData = client.fetchMergedData();
 
             verify(configClient, times(1)).execute(any(HttpGet.class), any(HttpClientResponseHandler.class));
             verify(dsnClient, times(1)).execute(any(HttpGet.class), any(HttpClientResponseHandler.class));
@@ -191,7 +191,7 @@ class DeepSpaceNetworkClientTest {
             byte[] dsnResponse = getBytes("dsn/dsnWithoutStations.xml");
             when(dsnClient.execute(any(HttpGet.class), any(HttpClientResponseHandler.class))).thenReturn(dsnResponse);
 
-            MergedData mergedData = client.fetchMergedState();
+            MergedData mergedData = client.fetchMergedData();
 
             verify(configClient, times(1)).execute(any(HttpGet.class), any(HttpClientResponseHandler.class));
             verify(dsnClient, times(1)).execute(any(HttpGet.class), any(HttpClientResponseHandler.class));
@@ -233,7 +233,7 @@ class DeepSpaceNetworkClientTest {
             when(dsnClient.execute(any(HttpGet.class), any(HttpClientResponseHandler.class))).thenReturn(dsnResponse);
 
             client.fetchConfiguration();
-            MergedData mergedData = client.fetchMergedState();
+            MergedData mergedData = client.fetchMergedData();
 
             verify(configClient, times(1)).execute(any(HttpGet.class), any(HttpClientResponseHandler.class));
             verify(dsnClient, times(1)).execute(any(HttpGet.class), any(HttpClientResponseHandler.class));
@@ -300,8 +300,8 @@ class DeepSpaceNetworkClientTest {
                     .thenReturn(secondComparison) // Check for expiry (Expired)
                     .thenReturn(secondAssignment); // Assignment in fetchConfiguration
 
-            MergedData mergedData1 = client.fetchMergedState();
-            MergedData mergedData2 = client.fetchMergedState();
+            MergedData mergedData1 = client.fetchMergedData();
+            MergedData mergedData2 = client.fetchMergedData();
 
             verify(configClient, times(2)).execute(any(HttpGet.class), any(HttpClientResponseHandler.class));
             verify(dsnClient, times(2)).execute(any(HttpGet.class), any(HttpClientResponseHandler.class));
