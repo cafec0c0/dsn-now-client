@@ -8,6 +8,9 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
 import java.time.ZoneOffset;
 
+/**
+ * Deserializes ZoneOffest from milliseconds
+ */
 public class ZoneOffsetDeserializer extends StdDeserializer<ZoneOffset> {
 
     public ZoneOffsetDeserializer() {
