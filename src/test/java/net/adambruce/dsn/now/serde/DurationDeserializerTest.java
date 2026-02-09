@@ -41,7 +41,7 @@ class DurationDeserializerTest {
 
         Duration result = durationDeserializer.deserialize(jsonParser, deserializationContext);
 
-        assertEquals(null, result);
+        assertNull(result);
     }
 
     @Test
