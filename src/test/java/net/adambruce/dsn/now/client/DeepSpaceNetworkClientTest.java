@@ -30,6 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 
@@ -56,6 +57,16 @@ class DeepSpaceNetworkClientTest {
     private ClassicHttpResponse httpResponse;
 
     private final DeepSpaceNetworkClient client = DeepSpaceNetworkClient.newDeepSpaceNetworkClient();
+
+    @Test
+    void shouldCreateNewClientWithDefaultMaxConfigAge() {
+        DeepSpaceNetworkClient.newDeepSpaceNetworkClient();
+    }
+
+    @Test
+    void shouldCreateNewClientWithMaxConfigAge() {
+        DeepSpaceNetworkClient.newDeepSpaceNetworkClient(Duration.ofMinutes(1));
+    }
 
     @Test
     void shouldFetchConfiguration() throws Exception {
@@ -248,6 +259,55 @@ class DeepSpaceNetworkClientTest {
             );
 
             assertEquals(Instant.ofEpochMilli(1770497799000L), mergedData.getTimestamp());
+        }
+    }
+
+    @Test
+    void shouldFetchNewConfigWhenExistingConfigHasExpired() throws Exception {
+        try (MockedStatic<HttpClients> staticHttpClient = mockStatic(HttpClients.class);
+             MockedStatic<Instant> staticInstant = mockStatic(Instant.class)) {
+            staticHttpClient.when(HttpClients::createDefault)
+                    .thenReturn(configClient)
+                    .thenReturn(dsnClient)
+                    .thenReturn(configClient)
+                    .thenReturn(dsnClient);
+
+            byte[] configResponse = getBytes("config/config.xml");
+            byte[] configResponse2 = getBytes("config/configWithOneSite.xml");
+            when(configClient.execute(any(HttpGet.class), any(HttpClientResponseHandler.class)))
+                    .thenReturn(configResponse)
+                    .thenReturn(configResponse2);
+
+            byte[] dsnResponse = getBytes("dsn/dsn.xml");
+            when(dsnClient.execute(any(HttpGet.class), any(HttpClientResponseHandler.class))).thenReturn(dsnResponse);
+
+            Instant firstAssignment = mock(Instant.class);
+
+            Instant firstAssignmentPlusExpiry = mock(Instant.class);
+            when(firstAssignment.plus(any(Duration.class))).thenReturn(firstAssignmentPlusExpiry);
+
+            Instant firstComparison = mock(Instant.class);
+            when(firstComparison.isAfter(firstAssignmentPlusExpiry)).thenReturn(false);
+
+            Instant secondComparison = mock(Instant.class);
+            when(secondComparison.isAfter(firstAssignmentPlusExpiry)).thenReturn(true);
+
+            Instant secondAssignment = mock(Instant.class);
+
+            staticInstant.when(Instant::now)
+                    .thenReturn(firstAssignment) // Assignment in fetchConfiguration
+                    .thenReturn(firstComparison) // Check for expiry (OK)
+                    .thenReturn(secondComparison) // Check for expiry (Expired)
+                    .thenReturn(secondAssignment); // Assignment in fetchConfiguration
+
+            MergedData mergedData1 = client.fetchMergedState();
+            MergedData mergedData2 = client.fetchMergedState();
+
+            verify(configClient, times(2)).execute(any(HttpGet.class), any(HttpClientResponseHandler.class));
+            verify(dsnClient, times(2)).execute(any(HttpGet.class), any(HttpClientResponseHandler.class));
+
+            assertEquals(3, mergedData1.getStations().size());
+            assertEquals(1, mergedData2.getStations().size());
         }
     }
 

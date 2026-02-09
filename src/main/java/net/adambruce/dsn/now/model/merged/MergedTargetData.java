@@ -1,13 +1,17 @@
 package net.adambruce.dsn.now.model.merged;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 /**
  * Merged target / spacecraft information from the DSN configuration and state endpoints.
  */
 @Getter
 @AllArgsConstructor
+@EqualsAndHashCode
+@ToString
 public class MergedTargetData {
     /**
      * the name of the spacecraft

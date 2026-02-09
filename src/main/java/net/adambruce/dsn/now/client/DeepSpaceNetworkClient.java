@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.extern.slf4j.Slf4j;
 import net.adambruce.dsn.now.model.config.Configuration;
 import net.adambruce.dsn.now.model.merged.MergedData;
 import net.adambruce.dsn.now.model.merged.MergedDishData;
@@ -22,6 +23,8 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
@@ -33,7 +36,11 @@ import java.util.stream.Collectors;
 /**
  * Client for requesting information from the DSN Now API.
  */
+@Slf4j
 public class DeepSpaceNetworkClient {
+
+    private static final String DSN_CONFIG_URL = "https://eyes.nasa.gov/apps/dsn-now/config.xml";
+    private static final String DSN_STATE_URL = "https://eyes.nasa.gov/dsn/data/dsn.xml";
 
     private static final SimpleModule SERDE_MODULE = new SimpleModule()
             .addDeserializer(ZoneOffset.class, new ZoneOffsetDeserializer());
@@ -46,18 +53,31 @@ public class DeepSpaceNetworkClient {
             .build();
 
     private final AtomicReference<Configuration> CONFIG = new AtomicReference<>();
+    private final AtomicReference<Instant> LAST_CONFIG_REFRESH = new AtomicReference<>();
 
-    private DeepSpaceNetworkClient() {
+    private final Duration maxConfigAge;
 
+    private DeepSpaceNetworkClient(Duration maxConfigurationAge) {
+        this.maxConfigAge = maxConfigurationAge;
+    }
+
+    /**
+     * Creates a new instance of the client with the default max configuration age (30 mins).
+     *
+     * @return a new client
+     */
+    public static DeepSpaceNetworkClient newDeepSpaceNetworkClient() {
+        return newDeepSpaceNetworkClient(Duration.ofMinutes(30));
     }
 
     /**
      * Creates a new instance of the client.
      *
+     * @param maxConfigurationAge the maximum configuration age before {@link #fetchMergedState()} will trigger refresh
      * @return a new client
      */
-    public static DeepSpaceNetworkClient newDeepSpaceNetworkClient() {
-        return new DeepSpaceNetworkClient();
+    public static DeepSpaceNetworkClient newDeepSpaceNetworkClient(Duration maxConfigurationAge) {
+        return new DeepSpaceNetworkClient(maxConfigurationAge);
     }
 
     /**
@@ -67,11 +87,13 @@ public class DeepSpaceNetworkClient {
      * @throws Exception the network request failed, or the response could not be deserialized
      */
     public Configuration fetchConfiguration() throws Exception {
+        log.debug("fetching configuration from {}", DSN_CONFIG_URL);
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpGet request = new HttpGet("https://eyes.nasa.gov/apps/dsn-now/config.xml");
+            HttpGet request = new HttpGet(DSN_CONFIG_URL);
             byte[] response = httpClient.execute(request, classicHttpResponse -> EntityUtils.toByteArray(classicHttpResponse.getEntity()));
             Configuration configuration = MAPPER.readValue(response, Configuration.class);
             CONFIG.set(configuration);
+            LAST_CONFIG_REFRESH.set(Instant.now());
             return configuration;
         }
     }
@@ -83,8 +105,9 @@ public class DeepSpaceNetworkClient {
      * @throws Exception the network request failed, or the response could not be deserialized
      */
     public State fetchState() throws Exception {
+        log.debug("fetching state from {}", DSN_STATE_URL);
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpGet request = new HttpGet("https://eyes.nasa.gov/dsn/data/dsn.xml");
+            HttpGet request = new HttpGet(DSN_STATE_URL);
             byte[] response = httpClient.execute(request, classicHttpResponse -> EntityUtils.toByteArray(classicHttpResponse.getEntity()));
             return MAPPER.readValue(response, State.class);
         }
@@ -93,12 +116,18 @@ public class DeepSpaceNetworkClient {
     /**
      * Fetches the current state of the DSN and merges the response with the DSN Now configuration to
      * provide a complete representation of DSN's current state.
+     * If the configuration is uninitialized or expired, a new configuration will be fetched.
      *
      * @return the current DSN state merged with the DSN Now configuration
      * @throws Exception the network request failed, or the response could not be deserialized
      */
     public MergedData fetchMergedState() throws Exception {
         if (CONFIG.get() == null) {
+            log.debug("configuration has not yet been set, updating configuration before fetching state");
+            fetchConfiguration();
+        }
+        if (Instant.now().isAfter(LAST_CONFIG_REFRESH.get().plus(maxConfigAge))) {
+            log.debug("configuration has expired, updating configuration before fetching state");
             fetchConfiguration();
         }
 
