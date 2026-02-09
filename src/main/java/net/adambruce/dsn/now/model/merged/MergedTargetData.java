@@ -40,8 +40,8 @@ public class MergedTargetData {
     private Long downLegRange;
 
     /**
-     * the Round Trip Light Time (RTLT) (s)
-     * @return the RTLT (s)
+     * the Round Trip Light Time (RTLT)
+     * @return the RTLT
      */
     private Duration roundTripLightTime;
 
