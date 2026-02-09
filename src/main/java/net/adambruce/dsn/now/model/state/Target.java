@@ -42,9 +42,9 @@ public class Target {
     private Long downLegRange;
 
     /**
-     * the Round Trip Light Time (RTLT) (s)
-     * @param roundTripLightTime the RTLT (s)
-     * @return the RTLT (s)
+     * the Round Trip Light Time (RTLT)
+     * @param roundTripLightTime the RTLT
+     * @return the RTLT
      */
     @Setter(onMethod_ = @JacksonXmlProperty(localName = "rtlt"))
     private Duration roundTripLightTime;
