@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.time.ZoneOffset;
 
 /**
- * Deserializes ZoneOffest from milliseconds
+ * Deserializes {@link java.time.ZoneOffset} from milliseconds
  */
 public class ZoneOffsetDeserializer extends StdDeserializer<ZoneOffset> {
 
@@ -18,7 +18,7 @@ public class ZoneOffsetDeserializer extends StdDeserializer<ZoneOffset> {
     }
 
     @Override
-    public ZoneOffset deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    public ZoneOffset deserialize(JsonParser p, DeserializationContext deserializationContext) throws IOException {
         Double zoneOffset = p.readValueAs(Double.class);
         return zoneOffset != null
                 ? ZoneOffset.ofTotalSeconds(((int)((double)zoneOffset)) / 1000)
